@@ -3,6 +3,7 @@ kind: Service
 metadata:
   name: apache
 spec:
+  type: ClusterIP
   selector:
     app: apache
   ports:
