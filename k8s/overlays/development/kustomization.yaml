@@ -1,0 +1,17 @@
+resources:
+  - ../../base
+  - ingress.yaml
+
+patchesStrategicMerge:
+  - |-
+    apiVersion: apps/v1
+    kind: Deployment
+    metadata:
+      name: apache
+      namespace: clicars
+    spec:
+      template:
+        spec:
+          containers:
+          - name: apache
+            image: clicarstest/apache:1.0
