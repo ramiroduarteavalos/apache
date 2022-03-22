@@ -63,7 +63,7 @@ jobs:
           IMAGE: ${{ steps.meta.outputs.tags }}-${{ github.sha }}
         run: |
           git config --local user.email "ramiroduarteavalos@gmail.com"
-          git config --local user.name "ramiro"
+          git config --local user.name "ramiroduarteavalos"
           git add .
           git commit -m "k8s: upgrade tag container image to $IMAGE"
           
