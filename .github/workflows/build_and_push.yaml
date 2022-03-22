@@ -52,10 +52,10 @@ jobs:
           BRANCH: ${{ steps.extract_branch.outputs.branch }}
         run: |
           if [ "$BRANCH" = "main" ]; then
-            sed -i "s#\bimage: ramiroduarteavalos/${{ env.REPOSITORY_NAME }}:.*#$1image: $IMAGE#" k8s/overlays/production/kustomization.yaml
+            sed -i "s#\bimage: clicarstest/${{ env.REPOSITORY_NAME }}:.*#$1image: $IMAGE#" k8s/overlays/production/kustomization.yaml
             cat k8s/overlays/production/kustomization.yaml
           else
-            sed -i "s#\bimage: ramiroduarteavalos/${{ env.REPOSITORY_NAME }}:.*#$1image: $IMAGE#" k8s/overlays/development/kustomization.yaml
+            sed -i "s#\bimage: clicarstest/${{ env.REPOSITORY_NAME }}:.*#$1image: $IMAGE#" k8s/overlays/development/kustomization.yaml
             cat k8s/overlays/development/kustomization.yaml
           fi
       - name: commit image change
