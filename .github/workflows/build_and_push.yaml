@@ -46,14 +46,29 @@ jobs:
         run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
         id: extract_branch
       
-      - name: Edit image on manifests repository
+      - name: Edit image on kustomize
         env:
+          IMAGE: ${{ steps.meta.outputs.tags }}-${{ github.sha }}
           BRANCH: ${{ steps.extract_branch.outputs.branch }}
+        run: |
+          if [ "$BRANCH" = "main" ]; then
+            sed -i "s#\bimage: ramiroduarteavalos/${{ env.REPOSITORY_NAME }}:.*#$1image: $IMAGE#" k8s/overlays/production/kustomization.yaml
+            cat k8s/overlays/production/kustomization.yaml
+          else
+            sed -i "s#\bimage: ramiroduarteavalos/${{ env.REPOSITORY_NAME }}:.*#$1image: $IMAGE#" k8s/overlays/development/kustomization.yaml
+            cat k8s/overlays/development/kustomization.yaml
+          fi
+      - name: commit image change
+        env:
           IMAGE: ${{ steps.meta.outputs.tags }}-${{ github.sha }}
         run: |
-          curl -X POST \
-              -H "Accept: application/vnd.github.v3+json" \
-              -H "Content-Type: application/json" \
-              -H "Authorization: token ${{ secrets.GH_TOKEN_ACTIONS }}" \
-              --data '{"event_type": "change_image", "client_payload": { "repository": "${{ env.REPOSITORY_NAME }}", "branch": "'"$BRANCH"'", "image": "'"$IMAGE"'", "actor": "'"$GITHUB_ACTOR"'" }}' \
-              https://api.github.com/repos/ramiroduarteavalos/${{ env.REPOSITORY_NAME }}/dispatches
+          git config --local user.email "ramiroduarteavalos@gmail.com"
+          git config --local user.name "ramiro"
+          git add .
+          git commit -m "k8s: upgrade tag container image to $IMAGE"
+          
+      - name: push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GH_TOKEN_ACTIONS }}
+          branch: ${{ github.ref }}
