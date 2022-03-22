@@ -22,8 +22,8 @@ jobs:
       - name: DockerHub login
         uses: docker/login-action@v1
         with:
-          username: clicarstest #${{ secrets.DOCKERHUB_USER }}
-          password: clicarstest #${{ secrets.DOCKERHUB_TOKEN }}
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Docker meta
         id: meta
@@ -57,3 +57,17 @@ jobs:
             sed -i "s#\bimage: ramiroduarteavalos/${{ env.REPOSITORY_NAME }}:.*#$1image: $IMAGE#" k8s/overlays/development/kustomization.yaml
             cat k8s/overlays/development/kustomization.yaml
           fi
+
+      - name: commit image change
+        env:
+          IMAGE: ${{ steps.meta.outputs.tags }}-${{ github.sha }}
+        run: |
+          git config --local user.email "tech@sarlanga"
+          git config --local user.name "ramiroduarteavalos"
+          git add .
+          git commit -m "k8s: upgrade tag container image to $IMAGE"
+      - name: push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GH_TOKEN_ACTIONS }}
+          branch: ${{ github.ref }}
