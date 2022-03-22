@@ -29,7 +29,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: ramiroduarteavalos/${{ env.REPOSITORY_NAME }}
+          images: clicarstest/${{ env.REPOSITORY_NAME }}
           
       - name: Build and push
         id: build
