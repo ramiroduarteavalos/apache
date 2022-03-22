@@ -1,0 +1,63 @@
+name: build and push
+on:
+  push:
+    branches:
+      - develop
+    paths-ignore:
+      - 'k8s/**'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        
+      - name: Extract branch name
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+        id: extract_branch
+
+      - run: echo "REPOSITORY_NAME=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
+
+      - name: DockerHub login
+        uses: docker/login-action@v1
+        with:
+          username: clicarstest #${{ secrets.DOCKERHUB_USER }}
+          password: clicarstest #${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ramiroduarteavalos/${{ env.REPOSITORY_NAME }}
+          
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}-${{ github.sha }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Extract branch name
+        shell: bash
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+        id: extract_branch
+        
+      - name: Edit image on kustomize
+        env:
+          IMAGE: ${{ steps.meta.outputs.tags }}-${{ github.sha }}
+          BRANCH: ${{ steps.extract_branch.outputs.branch }}
+        run: |
+          if [ "$BRANCH" = "main" ]; then
+            sed -i "s#\bimage: ramiroduarteavalos/apache:.*#$1image: $IMAGE#" k8s/overlays/production/kustomization.yaml
+            cat k8s/overlays/production/kustomization.yaml
+          else
+            sed -i "s#\bimage: ramiroduarteavalos/apache:.*#$1image: $IMAGE#" k8s/overlays/development/kustomization.yaml
+            cat k8s/overlays/development/kustomization.yaml
+          fi
