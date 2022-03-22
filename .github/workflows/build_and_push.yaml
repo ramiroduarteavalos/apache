@@ -17,10 +17,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
         
-      - name: Extract branch name
-        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
-        id: extract_branch
-
       - run: echo "REPOSITORY_NAME=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
 
       - name: DockerHub login
@@ -55,9 +51,9 @@ jobs:
           BRANCH: ${{ steps.extract_branch.outputs.branch }}
         run: |
           if [ "$BRANCH" = "main" ]; then
-            sed -i "s#\bimage: ramiroduarteavalos/apache:.*#$1image: $IMAGE#" k8s/overlays/production/kustomization.yaml
+            sed -i "s#\bimage: ramiroduarteavalos/${{ env.REPOSITORY_NAME }}:.*#$1image: $IMAGE#" k8s/overlays/production/kustomization.yaml
             cat k8s/overlays/production/kustomization.yaml
           else
-            sed -i "s#\bimage: ramiroduarteavalos/apache:.*#$1image: $IMAGE#" k8s/overlays/development/kustomization.yaml
+            sed -i "s#\bimage: ramiroduarteavalos/${{ env.REPOSITORY_NAME }}:.*#$1image: $IMAGE#" k8s/overlays/development/kustomization.yaml
             cat k8s/overlays/development/kustomization.yaml
           fi
